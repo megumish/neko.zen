@@ -1,0 +1,23 @@
+const std = @import("std");
+const Semigroup = @import("semigroup.zen").Semigroup;
+
+fn Functor(comptime A: type) type {
+    return interface {
+        fn empty() A;
+        usingnamespace Semigroup(A);
+    };
+}
+
+test "Functor Int" {
+    const intAdditionFunctor = struct {
+        fn empty() usize {
+            return 0;
+        }
+
+        fn combine(x: usize, y: usize) usize {
+            return x + y;
+        }
+    };
+
+    std.testing.equal(intAdditionFunctor.combine(1, 2), 3);
+}

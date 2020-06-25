@@ -1,0 +1,68 @@
+fn IList(comptime A: type) type {
+    return interface {};
+}
+
+fn List(comptime A: type) type {
+    return union(enum) {
+        NilType: void,
+        ConsType: ConsType(A, *vtable IList(A)),
+
+        fn fold(
+            list: List(A),
+            z: A,
+            func: fn (A, A) A,
+        ) A {
+            return switch (list) {
+                .NilType => |_| z,
+                .ConsType => |cons| 
+                    func(cons.item, z),
+            };
+        }
+    };
+}
+
+const Nil = NilType{};
+const NilType = struct {};
+
+fn Cons(item: anytype, tail: List(@TypeOf(item))) ConsType(
+    @TypeOf(item),
+    List(@TypeOf(item)),
+) {
+    return ConsType(
+        @TypeOf(item),
+        List(@TypeOf(item)),
+    ){ .item = item, .tail = tail };
+}
+fn ConsType(comptime B: type, comptime Bs: type) type {
+    return struct {
+        item: B,
+        tail: Bs,
+    };
+}
+
+test "fold" {
+    const std = @import("std");
+    const f = struct {
+        fn add(a: usize, b: usize) usize {
+            return a + b;
+        }
+    };
+
+    {
+        std.testing.equal(
+            List(usize).fold(.NilType, 0, f.add),
+            0,
+        );
+    }
+
+    {
+        std.testing.equal(
+            List(usize).fold(
+                .{.ConsType=Cons(@to(usize, 1), &.NilType)},
+                0,
+                f.add,
+            ),
+            1,
+        );
+    }
+}
