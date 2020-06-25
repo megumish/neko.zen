@@ -1,0 +1,18 @@
+const std = @import("std");
+
+fn Semigroup(comptime A: type) type {
+    return interface {
+        fn combine(x: A, y: A) A;
+    };
+}
+
+test "Semigroup Int" {
+
+    const intAdditionSemigroup = struct {
+        fn combine(x: usize, y: usize) usize {
+            return x + y;
+        }
+    };
+
+    std.testing.equal(intAdditionSemigroup.combine(1, 2), 3);
+}
